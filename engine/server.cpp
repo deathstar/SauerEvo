@@ -1079,6 +1079,8 @@ void initserver(bool listen, bool dedicated)
         setupwindow("Cube 2: Sauerbraten server");
 #endif
     }
+
+	clients.reserve(MAXCLIENTS);
     
     execfile("server-init.cfg", false);
 
