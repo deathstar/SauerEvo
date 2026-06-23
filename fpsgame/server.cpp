@@ -2660,7 +2660,7 @@ namespace server
         clientinfo *ci = getinfo(n);
         ci->clientnum = ci->ownernum = n;
         ci->connectmillis = totalmillis;
-        ci->sessionid = (rnd(0x1000000)*((totalmillis%10000)+1))&0xFFFFFF;
+        ci->sessionid = ((unsigned int)rnd(0x1000000) * ((totalmillis % 10000) + 1)) & 0xFFFFFF; 
 
         connects.add(ci);
         if(!m_mp(gamemode)) return DISC_LOCAL;
