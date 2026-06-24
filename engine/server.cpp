@@ -616,7 +616,7 @@ static void dispatch_enet_event(ENetEvent &event)
             string hn;
             copystring(c.hostname, (enet_address_get_host_ip(&c.peer->address, hn, sizeof(hn))==0) ? hn : "unknown");
             logoutf("client connected (%s)", c.hostname);
-            int reason = server::clientconnect(c.num, c.peer->address.host, c.hostname); //c.hostname passes IP for QServ
+            int reason = server::clientconnect(c.num, c.peer->address.host); 
             if(reason) disconnect_client(c.num, reason);
             break;
         }
