@@ -954,6 +954,18 @@ namespace server
         return best;
     }
 
+	int team_good_count = 0;
+	int team_evil_count = 0;
+    void update_team_counters() {
+    	team_good_count = 0;
+    	team_evil_count = 0;
+        loopv(clients) {
+            if (clients[i]->state.state == CS_SPECTATOR) continue;
+            if (strcmp(clients[i]->team, "good") == 0) team_good_count++;
+            else if (strcmp(clients[i]->team, "evil") == 0) team_evil_count++;
+        }
+    }
+
     VAR(persistteams, 0, 0, 1);
 
     void autoteam()
@@ -2278,9 +2290,19 @@ namespace server
             actor->state.frags += fragvalue;
             if(fragvalue>0)
             {
-                int friends = 0, enemies = 0; // note: friends also includes the fragger
-                if(m_teammode) loopv(clients) if(strcmp(clients[i]->team, actor->team)) enemies++; else friends++;
-                else { friends = 1; enemies = clients.length()-1; }
+                int friends = 0, enemies = 0;
+                if(m_teammode) 
+                {
+                    bool is_good = (strcmp(actor->team, "good") == 0);
+                        
+                    friends = is_good ? team_good_count : team_evil_count;
+                    enemies = is_good ? team_evil_count : team_good_count;
+                }
+                else 
+                { 
+                	friends = 1; 
+                    enemies = max((int)clients.length() - 1, 1); 
+                }
                 actor->state.effectiveness += fragvalue*friends/float(max(enemies, 1));
             }
             teaminfo *t = m_teammode ? teaminfos.access(actor->team) : NULL;
@@ -3334,6 +3356,10 @@ namespace server
                 {
                     if(ci->state.state==CS_ALIVE) suicide(ci);
                     copystring(ci->team, text);
+					if(strcmp(ci->team, "good") == 0) team_good_count--;
+      		        else if(strcmp(ci->team, "evil") == 0) team_evil_count--;
+					if(strcmp(ci->team, "good") == 0) team_good_count++;
+      		        else if(strcmp(ci->team, "evil") == 0) team_evil_count++;
                     aiman::changeteam(ci);
                     sendf(-1, 1, "riisi", N_SETTEAM, sender, ci->team, ci->state.state==CS_SPECTATOR ? -1 : 0);
                 }
