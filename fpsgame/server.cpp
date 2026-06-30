@@ -2684,6 +2684,7 @@ namespace server
         ci->connectmillis = totalmillis;
         ci->sessionid = ((unsigned int)rnd(0x1000000) * ((totalmillis % 10000) + 1)) & 0xFFFFFF; 
 
+		update_team_counters();
         connects.add(ci);
         if(!m_mp(gamemode)) return DISC_LOCAL;
         sendservinfo(ci);
@@ -2700,6 +2701,7 @@ namespace server
             if(smode) smode->leavegame(ci, true);
             ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
             savescore(ci);
+			update_team_counters();
             sendf(-1, 1, "ri2", N_CDIS, n);
             clients.removeobj(ci);
             aiman::removeai(ci);
@@ -3356,10 +3358,7 @@ namespace server
                 {
                     if(ci->state.state==CS_ALIVE) suicide(ci);
                     copystring(ci->team, text);
-					if(strcmp(ci->team, "good") == 0) team_good_count--;
-      		        else if(strcmp(ci->team, "evil") == 0) team_evil_count--;
-					if(strcmp(ci->team, "good") == 0) team_good_count++;
-      		        else if(strcmp(ci->team, "evil") == 0) team_evil_count++;
+					update_team_counters();
                     aiman::changeteam(ci);
                     sendf(-1, 1, "riisi", N_SETTEAM, sender, ci->team, ci->state.state==CS_SPECTATOR ? -1 : 0);
                 }
