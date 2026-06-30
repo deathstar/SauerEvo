@@ -960,6 +960,8 @@ namespace server
     	team_good_count = 0;
     	team_evil_count = 0;
         loopv(clients) {
+			if (clients[i] == NULL) continue;
+			if (clients[i]->team == NULL) continue;
             if (clients[i]->state.state == CS_SPECTATOR) continue;
             if (strcmp(clients[i]->team, "good") == 0) team_good_count++;
             else if (strcmp(clients[i]->team, "evil") == 0) team_evil_count++;
