@@ -616,13 +616,22 @@ static void dispatch_enet_event(ENetEvent &event)
             string hn;
             copystring(c.hostname, (enet_address_get_host_ip(&c.peer->address, hn, sizeof(hn))==0) ? hn : "unknown");
             logoutf("client connected (%s)", c.hostname);
-            int reason = server::clientconnect(c.num, c.peer->address.host); 
+            int reason = server::clientconnect(c.num, c.peer->address.host, c.hostname); //c.hostname passes IP for QServ
             if(reason) disconnect_client(c.num, reason);
             break;
         }
         case ENET_EVENT_TYPE_RECEIVE:
         {
             client *c = (client *)event.peer->data;
+            if(!c)
+            {
+                // Fallback: search active TCP/IP clients by peer pointer
+                loopv(clients) if(clients[i]->type == ST_TCPIP && clients[i]->peer == event.peer)
+                {
+                    c = clients[i];
+                    break;
+                }
+            }
             if(c) process(event.packet, c->num, event.channelID);
             if(event.packet->referenceCount==0) enet_packet_destroy(event.packet);
             break;
@@ -630,6 +639,15 @@ static void dispatch_enet_event(ENetEvent &event)
         case ENET_EVENT_TYPE_DISCONNECT:
         {
             client *c = (client *)event.peer->data;
+            if(!c)
+            {
+                // Fallback search prevents ghost clients if peer->data was lost or desynced
+                loopv(clients) if(clients[i]->type == ST_TCPIP && clients[i]->peer == event.peer)
+                {
+                    c = clients[i];
+                    break;
+                }
+            }
             if(!c) break;
             logoutf("disconnected client (%s)", c->hostname);
             server::clientdisconnect(c->num);
